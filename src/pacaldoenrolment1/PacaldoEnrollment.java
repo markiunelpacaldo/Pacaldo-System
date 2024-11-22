@@ -1,105 +1,93 @@
-
 package pacaldoenrolment1;
 
-
+import java.sql.*;
 import java.util.Scanner;
 
 public class PacaldoEnrollment {
-    private final config conf = new config();
-
-    public void addEnrollment() {
-        Scanner sc = new Scanner(System.in);
-        
-        System.out.print("Enter Enrollment ID: ");
-        int enrollment_id = sc.nextInt();
-
-        System.out.print("Enter Enrollment Date (YYYY-MM-DD): ");
-        String EnrollmentDate = sc.next(); 
-
-        System.out.print("Enter Status: ");
-        String Status = sc.next();
-
-        System.out.print("Enter Semester: ");
-        String Semester = sc.next();
-
-        String sql = "INSERT INTO Enrollment (enrollment_id,enrollment_date, status, semester) VALUES (?, ?, ?,?)";
-        
-        conf.addRecord(sql,enrollment_id ,EnrollmentDate, Status, Semester);
-    }
-        public void viewEnrollments() {
-        String enrollmentsQuery = "SELECT * FROM Enrollment";
-        String[] enrollmentHeaders = {"enrollment ID", "enrollment Date", "status", "semester"};
-        String[] enrollmentColumns = {"enrollment_id", "enrollment_date", "status", "semester"};
-
-        conf.viewRecords(enrollmentsQuery, enrollmentHeaders, enrollmentColumns);
-       
-    }
-
-    public void updateEnrollment() {
-        Scanner sc = new Scanner(System.in);
-
-        System.out.print("Enter Enrollment ID to update: ");
-        int enrollmentId = sc.nextInt();
-        
-        System.out.print("Enter new Enrollment Date (YYYY-MM-DD): ");
-        String enrollmentDate = sc.next(); 
-
-        System.out.print("Enter new Status: ");
-        String status = sc.next();
-
-        System.out.print("Enter new Semester: ");
-        String semester = sc.next();
-
-        String sql = "UPDATE Enrollment SET enrollment_date = ?, status = ?, semester = ? WHERE enrollment_id = ?";
-        
-        conf.updateRecord(sql, enrollmentDate, status, semester, enrollmentId);
-    }
-
-    public void deleteEnrollment() {
-        Scanner sc = new Scanner(System.in);
-        
-        System.out.print("Enter Enrollment ID to delete: ");
-        int enrollmentId = sc.nextInt();
-
-        String sql = "DELETE FROM Enrollment WHERE enrollment_id = ?";
-        conf.deleteEnrollment(sql, enrollmentId);
-  
-    }
-
     public static void main(String[] args) {
-        Scanner sc = new Scanner(System.in);
-        PacaldoEnrollment enrollmentManager = new PacaldoEnrollment();
+        Scanner scanner = new Scanner(System.in);
+        Connection conn = Database.connect();
 
-        while (true) {
-            System.out.println("Enrollment Management System");
-            System.out.println("1. Add Enrollment");
-            System.out.println("2. View Enrollments");
-            System.out.println("3. Update Enrollment");
-            System.out.println("4. Delete Enrollment");
-            System.out.println("5. Exit");
-            System.out.print("Select Choice: ");   
-            int choice = sc.nextInt();
+        // Create tables if not already created
+        Database.createTables(conn);
+
+        boolean running = true;
+        while (running) {
+            System.out.println("\nEnrollment System Menu:");
+            System.out.println("1. Add Student");
+            System.out.println("2. View Students");
+            System.out.println("3. Update Student");
+            System.out.println("4. Delete Student");
+            System.out.println("5. Add Course");
+            System.out.println("6. View Courses");
+            System.out.println("7. Update Course");
+            System.out.println("8. Delete Course");
+            System.out.println("9. Enroll Student");
+            System.out.println("10. Unenroll Student");
+            System.out.println("11. View Student Enrollments");  // New option added here
+            System.out.println("12. Exit");
+            System.out.print("Enter your choice: ");
+            
+            if (!scanner.hasNextInt()) {
+                System.out.println("Invalid input. Please enter a number between 1 and 12.");
+                scanner.next(); // Clear invalid input
+                continue;
+            }
+
+            int choice = scanner.nextInt();
+            scanner.nextLine(); // Consume newline
+
             switch (choice) {
                 case 1:
-                    enrollmentManager.addEnrollment();
+                    StudentManager.addStudent(conn, scanner);
                     break;
                 case 2:
-                    enrollmentManager.viewEnrollments();
+                    StudentManager.viewStudents(conn);
                     break;
                 case 3:
-                    enrollmentManager.updateEnrollment();
+                    StudentManager.updateStudent(conn, scanner);
                     break;
                 case 4:
-                    enrollmentManager.deleteEnrollment();
+                    StudentManager.deleteStudent(conn, scanner);
                     break;
                 case 5:
-                    System.out.println("Exiting...");
-                    return;
+                    CourseManager.addCourse(conn, scanner);
+                    break;
+                case 6:
+                    CourseManager.viewCourses(conn);
+                    break;
+                case 7:
+                    CourseManager.updateCourse(conn, scanner);
+                    break;
+                case 8:
+                    CourseManager.deleteCourse(conn, scanner);
+                    break;
+                case 9:
+                    EnrollmentManager.enrollStudent(conn, scanner);
+                    break;
+                case 10:
+                    EnrollmentManager.unenrollStudent(conn, scanner);
+                    break;
+                case 11:
+            EnrollmentManager.viewAllStudentEnrollments(conn);
+                       break;
+
+                case 12:
+                    System.out.print("Are you sure you want to exit? (Y/N): ");
+                    String exitConfirmation = scanner.nextLine();
+                    if ("Y".equalsIgnoreCase(exitConfirmation)) {
+                        System.out.println("Exiting the system.");
+                        return;
+                    }
                 default:
                     System.out.println("Invalid choice. Please try again.");
             }
         }
+
+        try {
+            conn.close();
+        } catch (SQLException e) {
+            System.out.println("Error closing the database connection: " + e.getMessage());
+        }
     }
 }
-        
-        
